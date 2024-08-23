@@ -1,6 +1,6 @@
 import jwt, datetime, os
-from flask import Flask, request
-from flask_mysqldb import MySQL
+from flask import Flask, request 
+from flask_mysqldb import MySQL 
 
 server = Flask(__name__)
 mysql = MySQL(server)
@@ -34,6 +34,20 @@ def login():
             return createJWT(auth.username, os.environ.get("JWT_SECRET"), True),
     else:
         return "invalid credentials", 401
+    
+@server.route("/validate", method=["POST"])
+def validate():
+    encoded_jwt = request.headers["Authorization"]
+    if not encoded_jwt:
+        return "no credentials provided", 401
+    encoded_jwt = encoded_jwt.split(" ")[1]
+        
+    try:
+        decoded = jwt.decode(encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"])
+    except:
+        return "not authorized", 403
+    return decoded, 200
+
     
 def createJWT(username, secret, authz):
     return jwt.encode(
